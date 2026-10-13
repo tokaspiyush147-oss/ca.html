@@ -1,750 +1,1125 @@
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My AI Chat</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+    <title>ChatGPT</title>
 
-body {
-    font-family: Arial, sans-serif;
-    background: #212121;
-    color: white;
-    height: 100vh;
-    overflow: hidden;
-}
+    <style>
+        /* =========================
+           1. GLOBAL STYLES
+        ========================= */
 
-/* Main layout */
-.app {
-    display: flex;
-    height: 100vh;
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* Sidebar */
-.sidebar {
-    width: 260px;
-    background: #171717;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    transition: 0.3s;
-}
+        :root {
+            --sidebar-bg: #f9f9f9;
+            --main-bg: #ffffff;
+            --text-color: #202123;
+            --secondary-text: #676767;
+            --border-color: #e5e5e5;
+            --hover-color: #ececec;
+            --input-bg: #ffffff;
+            --button-bg: #202123;
+            --button-text: #ffffff;
+        }
 
-.sidebar-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-}
+        body.dark {
+            --sidebar-bg: #171717;
+            --main-bg: #212121;
+            --text-color: #f5f5f5;
+            --secondary-text: #b4b4b4;
+            --border-color: #3a3a3a;
+            --hover-color: #303030;
+            --input-bg: #2f2f2f;
+            --button-bg: #f5f5f5;
+            --button-text: #202123;
+        }
 
-.logo {
-    font-size: 21px;
-    font-weight: bold;
-}
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--main-bg);
+            color: var(--text-color);
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            transition: background 0.2s, color 0.2s;
+        }
 
-.new-chat {
-    background: #303030;
-    color: white;
-    border: 1px solid #444;
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    text-align: left;
-    width: 100%;
-    margin-bottom: 20px;
-}
+        button,
+        textarea {
+            font: inherit;
+        }
 
-.new-chat:hover {
-    background: #3b3b3b;
-}
+        button {
+            cursor: pointer;
+        }
 
-.sidebar h4 {
-    color: #999;
-    font-size: 12px;
-    margin: 10px 5px;
-}
+        /* =========================
+           2. MAIN LAYOUT
+        ========================= */
 
-.chat-history {
-    overflow-y: auto;
-    flex: 1;
-}
+        .app {
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
 
-.history-item {
-    padding: 11px;
-    border-radius: 7px;
-    cursor: pointer;
-    font-size: 14px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
+        /* =========================
+           3. SIDEBAR
+        ========================= */
 
-.history-item:hover {
-    background: #303030;
-}
+        .sidebar {
+            width: 260px;
+            min-width: 260px;
+            background: var(--sidebar-bg);
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            transition: margin-left 0.25s;
+        }
 
-.sidebar-bottom {
-    border-top: 1px solid #333;
-    padding-top: 15px;
-}
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 6px 22px;
+        }
 
-.theme-button {
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-    color: white;
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 7px;
-}
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+        }
 
-.theme-button:hover {
-    background: #303030;
-}
+        .chatgpt-logo {
+            width: 30px;
+            height: 30px;
+            display: block;
+            object-fit: contain;
+        }
 
-/* Main chat area */
-.main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    position: relative;
-}
+        .icon-button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+        }
 
-.topbar {
-    padding: 18px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+        .icon-button:hover,
+        .sidebar-button:hover,
+        .history-item:hover {
+            background: var(--hover-color);
+        }
 
-.topbar h3 {
-    font-size: 17px;
-    font-weight: 500;
-}
+        .sidebar-button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-color);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
 
-.menu-button {
-    display: none;
-    border: none;
-    background: transparent;
-    color: inherit;
-    font-size: 23px;
-    cursor: pointer;
-}
+        .sidebar-button .symbol {
+            font-size: 20px;
+            width: 22px;
+            text-align: center;
+        }
 
-/* Messages */
-.messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 20px 180px;
-}
+        .history-heading {
+            margin: 28px 10px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--secondary-text);
+        }
 
-.welcome {
-    text-align: center;
-    margin: 12vh auto 0;
-    max-width: 600px;
-}
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
 
-.welcome h1 {
-    font-size: 30px;
-    margin-bottom: 30px;
-}
+        .history-item {
+            padding: 11px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
 
-.suggestions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 30px;
-}
+        .history-item.active {
+            background: var(--hover-color);
+        }
 
-.suggestion {
-    padding: 16px;
-    background: transparent;
-    color: inherit;
-    border: 1px solid #444;
-    border-radius: 12px;
-    text-align: left;
-    cursor: pointer;
-    font-size: 14px;
-}
+        .sidebar-footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
 
-.suggestion:hover {
-    background: #303030;
-}
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 6px;
+            font-size: 13px;
+        }
 
-/* Message rows */
-.message-row {
-    max-width: 780px;
-    margin: 0 auto 25px;
-    display: flex;
-    gap: 14px;
-    align-items: flex-start;
-}
+        .profile-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #10a37f;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
 
-.avatar {
-    min-width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #10a37f;
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
-}
+        /* =========================
+           4. MAIN CHAT AREA
+        ========================= */
 
-.message-content {
-    line-height: 1.7;
-    overflow-wrap: anywhere;
-    padding-top: 3px;
-    white-space: pre-wrap;
-}
+        .main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--main-bg);
+            position: relative;
+        }
 
-.user-avatar {
-    background: #555;
-}
+        .topbar {
+            height: 62px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
 
-.message-content p {
-    margin-bottom: 10px;
-}
+        .topbar-left,
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-/* Input area */
-.input-area {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 20px;
-    background: linear-gradient(
-        transparent,
-        #212121 18%
-    );
-}
+        .model-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
 
-.input-box {
-    max-width: 780px;
-    margin: 0 auto;
-    background: #303030;
-    border: 1px solid #555;
-    border-radius: 18px;
-    padding: 12px 14px;
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-}
+        .model-badge {
+            color: var(--secondary-text);
+            font-size: 12px;
+            margin-left: 4px;
+        }
 
-#userInput {
-    flex: 1;
-    min-width: 0;
-    max-height: 180px;
-    resize: none;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: white;
-    font-family: inherit;
-    font-size: 16px;
-    line-height: 1.5;
-    padding: 8px 0;
-}
+        /* =========================
+           5. CHAT MESSAGES
+        ========================= */
 
-#userInput::placeholder {
-    color: #aaa;
-}
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px 20px 20px;
+            scroll-behavior: smooth;
+        }
 
-.send-button {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: none;
-    background: white;
-    color: #171717;
-    font-size: 22px;
-    cursor: pointer;
-    flex-shrink: 0;
-}
+        .chat-content {
+            width: 100%;
+            max-width: 760px;
+            margin: 0 auto;
+        }
 
-.send-button:hover {
-    background: #ddd;
-}
+        .welcome {
+            min-height: 48vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px 0 40px;
+        }
 
-.send-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+        .welcome-logo {
+            width: 56px;
+            height: 56px;
+            margin-bottom: 22px;
+        }
 
-.disclaimer {
-    text-align: center;
-    font-size: 11px;
-    color: #aaa;
-    margin-top: 12px;
-}
+        .welcome h1 {
+            font-size: clamp(25px, 4vw, 34px);
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
 
-/* Light theme */
-body.light {
-    background: #ffffff;
-    color: #202123;
-}
+        .suggestions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            max-width: 640px;
+        }
 
-body.light .sidebar {
-    background: #f5f5f5;
-}
+        .suggestion {
+            text-align: left;
+            background: var(--main-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 16px;
+            border-radius: 15px;
+            font-size: 14px;
+            min-height: 76px;
+            transition: background 0.15s;
+        }
 
-body.light .new-chat,
-body.light .suggestion {
-    color: #202123;
-    background: transparent;
-    border-color: #ddd;
-}
+        .suggestion:hover {
+            background: var(--hover-color);
+        }
 
-body.light .new-chat:hover,
-body.light .suggestion:hover,
-body.light .history-item:hover,
-body.light .theme-button:hover {
-    background: #e8e8e8;
-}
+        .suggestion strong {
+            display: block;
+            margin-bottom: 7px;
+        }
 
-body.light .theme-button {
-    color: #202123;
-}
+        .suggestion span {
+            color: var(--secondary-text);
+            font-size: 12px;
+        }
 
-body.light .input-box {
-    background: #f4f4f4;
-    border-color: #ddd;
-}
+        .message {
+            display: flex;
+            gap: 14px;
+            margin: 20px 0 30px;
+            align-items: flex-start;
+        }
 
-body.light #userInput {
-    color: #202123;
-}
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--hover-color);
+            overflow: hidden;
+        }
 
-body.light .input-area {
-    background: linear-gradient(
-        transparent,
-        #ffffff 18%
-    );
-}
+        .message-avatar img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+        }
 
-body.light .disclaimer {
-    color: #666;
-}
+        .user-avatar {
+            background: #10a37f;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: bold;
+        }
 
-body.light .user-avatar {
-    background: #ddd;
-    color: #202123;
-}
+        .message-body {
+            flex: 1;
+            min-width: 0;
+            padding-top: 6px;
+            line-height: 1.75;
+            font-size: 15px;
+            overflow-wrap: anywhere;
+        }
 
-body.light .avatar:not(.user-avatar) {
-    background: #10a37f;
-    color: white;
-}
+        .message-role {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 7px;
+        }
 
-/* Mobile design */
-@media (max-width: 650px) {
-    .sidebar {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 10;
-        width: 260px;
-        transform: translateX(-100%);
-    }
+        .message-text {
+            white-space: pre-wrap;
+        }
 
-    .sidebar.open {
-        transform: translateX(0);
-    }
+        .message-text code {
+            font-family: Consolas, Monaco, monospace;
+        }
 
-    .menu-button {
-        display: block;
-    }
+        .typing {
+            color: var(--secondary-text);
+            font-size: 14px;
+        }
 
-    .topbar {
-        padding: 15px;
-        gap: 12px;
-    }
+        /* =========================
+           6. INPUT AREA
+        ========================= */
 
-    .messages {
-        padding: 15px 14px 170px;
-    }
+        .composer-section {
+            padding: 10px 20px 14px;
+            flex-shrink: 0;
+        }
 
-    .welcome {
-        margin-top: 8vh;
-    }
+        .composer {
+            max-width: 760px;
+            width: 100%;
+            margin: 0 auto;
+            border: 1px solid var(--border-color);
+            border-radius: 26px;
+            background: var(--input-bg);
+            padding: 12px 12px 12px 18px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
 
-    .welcome h1 {
-        font-size: 24px;
-    }
+        .composer textarea {
+            flex: 1;
+            min-width: 0;
+            max-height: 180px;
+            min-height: 28px;
+            resize: none;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text-color);
+            font-size: 15px;
+            line-height: 1.6;
+            padding: 3px 0;
+        }
 
-    .suggestions {
-        grid-template-columns: 1fr;
-    }
+        .composer textarea::placeholder {
+            color: var(--secondary-text);
+        }
 
-    .input-area {
-        padding: 12px;
-    }
+        .send-button {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border: none;
+            border-radius: 50%;
+            background: var(--button-bg);
+            color: var(--button-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
 
-    .message-row {
-        gap: 10px;
-    }
-}
-</style>
+        .send-button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .disclaimer {
+            text-align: center;
+            color: var(--secondary-text);
+            font-size: 11px;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        /* =========================
+           7. SIDEBAR TOGGLE
+        ========================= */
+
+        .app.sidebar-hidden .sidebar {
+            display: none;
+        }
+
+        /* =========================
+           8. RESPONSIVE DESIGN
+        ========================= */
+
+        @media (max-width: 700px) {
+            .sidebar {
+                position: absolute;
+                z-index: 10;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: min(280px, 85vw);
+                min-width: 0;
+                box-shadow: 5px 0 25px rgba(0, 0, 0, 0.12);
+            }
+
+            .app.sidebar-hidden .sidebar {
+                display: none;
+            }
+
+            .topbar {
+                padding: 0 12px;
+            }
+
+            .chat-area {
+                padding: 16px 14px;
+            }
+
+            .welcome {
+                min-height: 42vh;
+            }
+
+            .suggestions {
+                grid-template-columns: 1fr;
+            }
+
+            .suggestion {
+                min-height: auto;
+                padding: 13px;
+            }
+
+            .composer-section {
+                padding: 8px 10px 12px;
+            }
+
+            .message {
+                gap: 10px;
+            }
+
+            .message-body {
+                font-size: 14px;
+            }
+
+            .model-badge {
+                display: none;
+            }
+        }
+
+        @media (min-width: 701px) {
+            .app.sidebar-hidden .sidebar {
+                display: none;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="app">
+<div class="app" id="app">
 
-    <!-- Sidebar -->
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+
     <aside class="sidebar" id="sidebar">
 
-        <div class="sidebar-top">
-            <div class="logo">✳ My AI</div>
+        <div class="sidebar-header">
+
+            <div class="brand">
+                <img
+                    class="chatgpt-logo"
+                    src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg"
+                    alt="ChatGPT logo"
+                >
+                <span>ChatGPT</span>
+            </div>
+
+            <button
+                class="icon-button"
+                id="closeSidebar"
+                type="button"
+                aria-label="Close sidebar"
+                title="Close sidebar"
+            >☰</button>
+
         </div>
 
-        <button class="new-chat" id="newChat">
-            ＋ New chat
+        <button class="sidebar-button" id="newChat" type="button">
+            <span class="symbol">＋</span>
+            <span>New chat</span>
         </button>
 
-        <h4>RECENT CHATS</h4>
+        <button class="sidebar-button" id="toggleTheme" type="button">
+            <span class="symbol" id="themeSymbol">☾</span>
+            <span id="themeLabel">Dark mode</span>
+        </button>
 
-        <div class="chat-history" id="chatHistory"></div>
+        <div class="history-heading">Recent chats</div>
 
-        <div class="sidebar-bottom">
-            <button class="theme-button" id="themeButton">
-                ☀️ Switch to light mode
-            </button>
+        <div class="history-list" id="historyList"></div>
+
+        <div class="sidebar-footer">
+            <div class="profile">
+                <div class="profile-avatar">U</div>
+                <div>
+                    <div style="font-weight: 600;">Guest User</div>
+                    <div style="color: var(--secondary-text); margin-top: 3px;">
+                        Demo account
+                    </div>
+                </div>
+            </div>
         </div>
 
     </aside>
 
-    <!-- Main section -->
+    <!-- =========================
+         MAIN CHAT
+    ========================== -->
+
     <main class="main">
 
         <header class="topbar">
-            <button class="menu-button" id="menuButton"
-                    aria-label="Open sidebar">
-                ☰
-            </button>
 
-            <h3>My AI Chat</h3>
+            <div class="topbar-left">
 
-            <span>✨</span>
+                <button
+                    class="icon-button"
+                    id="openSidebar"
+                    type="button"
+                    aria-label="Open sidebar"
+                    title="Open sidebar"
+                >☰</button>
+
+                <div>
+                    <span class="model-name">ChatGPT</span>
+                    <span class="model-badge">Demo</span>
+                </div>
+
+            </div>
+
+            <div class="topbar-right">
+
+                <button
+                    class="icon-button"
+                    id="topTheme"
+                    type="button"
+                    aria-label="Toggle color theme"
+                    title="Toggle color theme"
+                >☾</button>
+
+            </div>
+
         </header>
 
-        <!-- Chat messages -->
-        <section class="messages" id="messages"
-                 aria-live="polite">
+        <!-- Messages appear here -->
 
-            <div class="welcome" id="welcome">
+        <section class="chat-area" id="chatArea">
 
-                <h1>What can I help with?</h1>
+            <div class="chat-content" id="chatContent">
 
-                <div class="suggestions">
+                <div class="welcome" id="welcome">
 
-                    <button class="suggestion">
-                        💡 Explain a difficult topic
-                    </button>
+                    <img
+                        class="welcome-logo chatgpt-logo"
+                        src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg"
+                        alt="ChatGPT logo"
+                    >
 
-                    <button class="suggestion">
-                        💻 Help me write code
-                    </button>
+                    <h1>What can I help with?</h1>
 
-                    <button class="suggestion">
-                        📚 Help me study for exams
-                    </button>
+                    <div class="suggestions">
 
-                    <button class="suggestion">
-                        ✍️ Write something for me
-                    </button>
+                        <button
+                            class="suggestion"
+                            data-prompt="Teach me HTML from the beginning."
+                            type="button"
+                        >
+                            <strong>Learn HTML</strong>
+                            <span>Start building websites</span>
+                        </button>
+
+                        <button
+                            class="suggestion"
+                            data-prompt="Explain CSS with beginner-friendly examples."
+                            type="button"
+                        >
+                            <strong>Learn CSS</strong>
+                            <span>Understand website design</span>
+                        </button>
+
+                        <button
+                            class="suggestion"
+                            data-prompt="Teach me JavaScript basics with examples."
+                            type="button"
+                        >
+                            <strong>Learn JavaScript</strong>
+                            <span>Make websites interactive</span>
+                        </button>
+
+                        <button
+                            class="suggestion"
+                            data-prompt="Give me a C++ programming practice question."
+                            type="button"
+                        >
+                            <strong>Practice coding</strong>
+                            <span>Improve your programming skills</span>
+                        </button>
+
+                    </div>
 
                 </div>
+
+                <div id="messages"></div>
 
             </div>
 
         </section>
 
-        <!-- Message input -->
-        <div class="input-area">
+        <!-- =========================
+             MESSAGE COMPOSER
+        ========================== -->
 
-            <form class="input-box" id="chatForm">
+        <section class="composer-section">
+
+            <form class="composer" id="chatForm">
 
                 <textarea
-                    id="userInput"
-                    placeholder="Ask anything..."
+                    id="messageInput"
+                    placeholder="Message ChatGPT"
                     rows="1"
-                    aria-label="Your message"
-                    required
+                    aria-label="Type your message"
                 ></textarea>
 
-                <button class="send-button" id="sendButton"
-                        type="submit" aria-label="Send message">
-                    ↑
-                </button>
+                <button
+                    class="send-button"
+                    id="sendButton"
+                    type="submit"
+                    aria-label="Send message"
+                    disabled
+                >↑</button>
 
             </form>
 
             <p class="disclaimer">
-                My AI can make mistakes. Check important information.
+                This is a ChatGPT-style demo. Responses are generated by
+                simple JavaScript rules, not by the real ChatGPT model.
             </p>
 
-        </div>
+        </section>
 
     </main>
 
 </div>
 
 <script>
-const messages = document.getElementById("messages");
-const welcome = document.getElementById("welcome");
-const userInput = document.getElementById("userInput");
-const chatForm = document.getElementById("chatForm");
-const newChat = document.getElementById("newChat");
-const chatHistory = document.getElementById("chatHistory");
-const sidebar = document.getElementById("sidebar");
-const menuButton = document.getElementById("menuButton");
-const themeButton = document.getElementById("themeButton");
-const sendButton = document.getElementById("sendButton");
+    /* =========================
+       1. GET HTML ELEMENTS
+    ========================= */
 
-let currentChatId = 0;
-let chats = [];
-let isWaiting = false;
+    const app = document.getElementById("app");
+    const messageInput = document.getElementById("messageInput");
+    const chatForm = document.getElementById("chatForm");
+    const sendButton = document.getElementById("sendButton");
+    const messages = document.getElementById("messages");
+    const welcome = document.getElementById("welcome");
+    const chatArea = document.getElementById("chatArea");
+    const historyList = document.getElementById("historyList");
 
-// Create a new conversation
-function createNewChat() {
-    currentChatId++;
+    /* =========================
+       2. CHAT DATA
+    ========================= */
 
-    chats.unshift({
-        id: currentChatId,
-        title: "New chat",
-        messages: []
-    });
+    let chats = [];
+    let activeChatId = null;
+    let nextChatId = 1;
+    let isReplying = false;
 
-    welcome.style.display = "block";
-    messages.querySelectorAll(".message-row").forEach(row => row.remove());
+    /* =========================
+       3. CREATE NEW CHAT
+    ========================= */
 
-    userInput.value = "";
-    userInput.style.height = "auto";
+    function createNewChat() {
+        const chat = {
+            id: nextChatId++,
+            title: "New chat",
+            messages: []
+        };
 
-    renderHistory();
-    sidebar.classList.remove("open");
-    userInput.focus();
-}
+        chats.unshift(chat);
+        activeChatId = chat.id;
 
-// Display conversation history
-function renderHistory() {
-    chatHistory.replaceChildren();
+        renderChat();
+        renderHistory();
 
-    chats.forEach(chat => {
-        const item = document.createElement("div");
+        messageInput.focus();
+    }
 
-        item.className = "history-item";
-        item.textContent = chat.title;
-        item.title = chat.title;
+    /* =========================
+       4. GET ACTIVE CHAT
+    ========================= */
 
-        item.addEventListener("click", () => {
-            openChat(chat.id);
+    function getActiveChat() {
+        return chats.find(chat => chat.id === activeChatId);
+    }
+
+    /* =========================
+       5. DISPLAY CHAT
+    ========================= */
+
+    function renderChat() {
+        const chat = getActiveChat();
+
+        messages.replaceChildren();
+
+        if (!chat || chat.messages.length === 0) {
+            welcome.style.display = "flex";
+        } else {
+            welcome.style.display = "none";
+
+            chat.messages.forEach(message => {
+                addMessageToScreen(message.role, message.text);
+            });
+        }
+
+        scrollToBottom();
+    }
+
+    /* =========================
+       6. DISPLAY ONE MESSAGE
+    ========================= */
+
+    function addMessageToScreen(role, text) {
+        const message = document.createElement("div");
+        message.className = "message";
+
+        const avatar = document.createElement("div");
+        avatar.className = "message-avatar";
+
+        if (role === "assistant") {
+            const logo = document.createElement("img");
+
+            logo.src =
+                "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg";
+
+            logo.alt = "ChatGPT";
+            avatar.appendChild(logo);
+        } else {
+            avatar.classList.add("user-avatar");
+            avatar.textContent = "U";
+        }
+
+        const body = document.createElement("div");
+        body.className = "message-body";
+
+        const roleName = document.createElement("div");
+        roleName.className = "message-role";
+        roleName.textContent = role === "assistant" ? "ChatGPT (Demo)" : "You";
+
+        const messageText = document.createElement("div");
+        messageText.className = "message-text";
+
+        // textContent safely displays text instead of executing HTML.
+        messageText.textContent = text;
+
+        body.appendChild(roleName);
+        body.appendChild(messageText);
+
+        message.appendChild(avatar);
+        message.appendChild(body);
+
+        messages.appendChild(message);
+    }
+
+    /* =========================
+       7. ADD MESSAGE TO CHAT
+    ========================= */
+
+    function addMessage(role, text) {
+        const chat = getActiveChat();
+
+        if (!chat) return;
+
+        chat.messages.push({
+            role: role,
+            text: text
         });
 
-        chatHistory.appendChild(item);
-    });
-}
+        addMessageToScreen(role, text);
 
-// Open an earlier conversation
-function openChat(id) {
-    const chat = chats.find(item => item.id === id);
+        if (chat.messages.length === 1) {
+            chat.title = text.length > 28
+                ? text.slice(0, 28) + "..."
+                : text;
 
-    if (!chat) return;
+            renderHistory();
+        }
 
-    currentChatId = id;
-
-    messages.querySelectorAll(".message-row").forEach(row => row.remove());
-
-    welcome.style.display = chat.messages.length ? "none" : "block";
-
-    chat.messages.forEach(message => {
-        addMessage(message.text, message.sender, false);
-    });
-
-    sidebar.classList.remove("open");
-}
-
-// Add a message to the screen
-function addMessage(text, sender, save = true) {
-    welcome.style.display = "none";
-
-    const row = document.createElement("div");
-    row.className = "message-row";
-
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-
-    const content = document.createElement("div");
-    content.className = "message-content";
-
-    if (sender === "user") {
-        avatar.classList.add("user-avatar");
-        avatar.textContent = "Y";
-        content.textContent = text;
-    } else {
-        avatar.textContent = "✳";
-        content.textContent = text;
+        scrollToBottom();
     }
 
-    row.append(avatar, content);
-    messages.appendChild(row);
+    /* =========================
+       8. DEMO RESPONSES
+    ========================= */
 
-    if (save) {
-        const chat = chats.find(item => item.id === currentChatId);
+    function getDemoResponse(userText) {
+        const text = userText.toLowerCase().trim();
 
-        if (chat) {
-            chat.messages.push({ text, sender });
+        if (
+            text.includes("hello") ||
+            text.includes("hi") ||
+            text.includes("hey")
+        ) {
+            return "Hello! Welcome to your ChatGPT-style website. How can I help you today?";
+        }
 
-            if (chat.title === "New chat" && sender === "user") {
-                chat.title = text.length > 28
-                    ? text.slice(0, 28) + "..."
-                    : text;
+        if (text.includes("who are you")) {
+            return "I am the demo assistant on your website. This version does not use the real ChatGPT model.";
+        }
 
-                renderHistory();
+        if (text.includes("html")) {
+            return "HTML is the language used to structure web pages. It provides elements such as headings, paragraphs, buttons, links, images, and forms.\n\nExample:\n<h1>Hello World</h1>\n<p>Welcome to my website!</p>\n\nSave this code in an HTML file and open it in your browser.";
+        }
+
+        if (text.includes("css")) {
+            return "CSS controls how a website looks. It can change colors, spacing, fonts, layouts, and animations.\n\nExample:\nbody {\n    background: black;\n    color: white;\n    font-family: Arial, sans-serif;\n}\n\nPut CSS inside a <style> element in your HTML file.";
+        }
+
+        if (text.includes("javascript") || text.includes("java script")) {
+            return "JavaScript makes websites interactive. It can respond to clicks, validate forms, update content, and communicate with servers.\n\nExample:\nfunction greet() {\n    alert('Hello World!');\n}\n\nYou can connect JavaScript to a button using an event listener.";
+        }
+
+        if (text.includes("python")) {
+            return "Python is a beginner-friendly programming language used for automation, data analysis, web development, and AI.\n\nExample:\nname = input('Enter your name: ')\nprint('Hello', name)\n\nThis program asks for your name and prints a greeting.";
+        }
+
+        if (text.includes("c++") || text.includes("cpp")) {
+            return "C++ is a programming language widely used for software development, competitive programming, and performance-critical applications.\n\nExample:\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << \"Hello World\";\n    return 0;\n}\n\nThis program prints Hello World.";
+        }
+
+        if (text.includes("study") || text.includes("exam")) {
+            return "Here is a simple study plan:\n\n1. Read one topic carefully.\n2. Write short notes in your own words.\n3. Practise important questions.\n4. Solve previous-year questions if available.\n5. Revise the topic regularly.\n\nTell me your subject and topic for a more specific plan.";
+        }
+
+        if (text.includes("help")) {
+            return "I can demonstrate simple responses about HTML, CSS, JavaScript, Python, C++, and study planning.\n\nTry asking: 'Teach me HTML' or 'Give me a C++ example'.\n\nRemember, this is a demo and does not have access to the real ChatGPT model.";
+        }
+
+        if (text.includes("time") && text.includes("date")) {
+            return "Your computer's current date and time are: " + new Date().toLocaleString();
+        }
+
+        return "Thanks for your message!\n\nYour website's chat interface is working, but this is only a demo. It uses predefined JavaScript responses and cannot answer arbitrary questions like the real ChatGPT model.\n\nTo enable genuine AI answers, connect a backend server to an AI API. Keep your API key on the server, never in this public HTML file.";
+    }
+
+    /* =========================
+       9. SEND MESSAGE
+    ========================= */
+
+    function sendMessage(text) {
+        if (isReplying) return;
+
+        const userText = text.trim();
+
+        if (!userText) return;
+
+        if (!getActiveChat()) {
+            createNewChat();
+        }
+
+        messageInput.value = "";
+        resizeInput();
+        updateSendButton();
+
+        addMessage("user", userText);
+
+        isReplying = true;
+        updateSendButton();
+
+        const typing = document.createElement("div");
+        typing.className = "message typing";
+        typing.textContent = "Demo assistant is thinking...";
+        typing.id = "typingIndicator";
+
+        messages.appendChild(typing);
+        scrollToBottom();
+
+        // Simulate a short delay before the demo response.
+        window.setTimeout(() => {
+            typing.remove();
+
+            const response = getDemoResponse(userText);
+
+            addMessage("assistant", response);
+
+            isReplying = false;
+            updateSendButton();
+            messageInput.focus();
+        }, 450);
+    }
+
+    /* =========================
+       10. FORM EVENTS
+    ========================= */
+
+    chatForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        sendMessage(messageInput.value);
+    });
+
+    messageInput.addEventListener("input", function() {
+        resizeInput();
+        updateSendButton();
+    });
+
+    messageInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+
+            if (!isReplying && messageInput.value.trim()) {
+                chatForm.requestSubmit();
             }
         }
-    }
-
-    messages.scrollTop = messages.scrollHeight;
-
-    return content;
-}
-
-// Simple demo response generator
-// This is not a real AI model.
-function getDemoResponse(question) {
-    const q = question.toLowerCase();
-
-    if (q.includes("hello") || q.includes("hi")) {
-        return "Hello! 👋 How can I help you today?";
-    }
-
-    if (q.includes("your name")) {
-        return "I'm My AI, a demo chatbot built with HTML, CSS, and JavaScript.";
-    }
-
-    if (q.includes("html")) {
-        return "HTML stands for HyperText Markup Language. It structures webpages using elements such as headings, paragraphs, links, images, and forms.";
-    }
-
-    if (q.includes("css")) {
-        return "CSS stands for Cascading Style Sheets. It controls the appearance of webpages, including colors, spacing, layouts, and responsive design.";
-    }
-
-    if (q.includes("javascript") || q.includes("java script")) {
-        return "JavaScript makes webpages interactive. You can use it to respond to clicks, validate forms, update content, and build web applications.";
-    }
-
-    if (q.includes("python")) {
-        return "Python is a beginner-friendly programming language used for automation, web development, data science, and artificial intelligence.";
-    }
-
-    if (q.includes("cpp") || q.includes("c++")) {
-        return "C++ is a compiled programming language. Start with variables, data types, operators, conditions, loops, functions, arrays, and object-oriented programming.";
-    }
-
-    if (q.includes("study") || q.includes("exam")) {
-        return "Try this study plan:\n\n1. Understand the topic.\n2. Make short notes.\n3. Practise important questions.\n4. Solve previous exam papers.\n5. Revise regularly.\n\nTell me your subject and I can help you make a more specific plan.";
-    }
-
-    if (q.includes("help")) {
-        return "Of course! Tell me what you need help with. You can ask about programming, studying, writing, science, or general topics.";
-    }
-
-    return "Thanks for your question!\n\nThis demo chatbot can respond to a few predefined topics, but it isn't connected to a real AI model or live search engine.\n\nTo get intelligent answers to arbitrary questions and search the web, you would need to connect a backend to an AI API or search service.";
-}
-
-// Send message
-function sendMessage(text) {
-    text = text.trim();
-
-    if (!text || isWaiting) return;
-
-    if (currentChatId === 0) {
-        createNewChat();
-    }
-
-    addMessage(text, "user");
-
-    userInput.value = "";
-    userInput.style.height = "auto";
-
-    isWaiting = true;
-    sendButton.disabled = true;
-
-    const answer = getDemoResponse(text);
-
-    // Simulate a short response delay
-    setTimeout(() => {
-        addMessage(answer, "ai");
-
-        isWaiting = false;
-        sendButton.disabled = false;
-        userInput.focus();
-    }, 500);
-}
-
-// Submit using the Send button or Enter
-chatForm.addEventListener("submit", function(event) {
-    event.preventDefault();
-    sendMessage(userInput.value);
-});
-
-// Enter sends; Shift+Enter adds a new line
-userInput.addEventListener("keydown", function(event) {
-    if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        chatForm.requestSubmit();
-    }
-});
-
-// Automatically increase textarea height
-userInput.addEventListener("input", function() {
-    userInput.style.height = "auto";
-    userInput.style.height =
-        Math.min(userInput.scrollHeight, 180) + "px";
-});
-
-// New chat button
-newChat.addEventListener("click", createNewChat);
-
-// Example prompts
-document.querySelectorAll(".suggestion").forEach(button => {
-    button.addEventListener("click", () => {
-        sendMessage(button.textContent.replace(/^[^\w]+/, "").trim());
     });
-});
 
-// Mobile sidebar
-menuButton.addEventListener("click", () => {
-    sidebar.classList.toggle("open");
-});
+    function resizeInput() {
+        messageInput.style.height = "auto";
 
-// Light/dark mode
-themeButton.addEventListener("click", () => {
-    document.body.classList.toggle("light");
+        messageInput.style.height =
+            Math.min(messageInput.scrollHeight, 180) + "px";
+    }
 
-    themeButton.textContent =
-        document.body.classList.contains("light")
-            ? "🌙 Switch to dark mode"
-            : "☀️ Switch to light mode";
-});
+    function updateSendButton() {
+        sendButton.disabled =
+            isReplying || !messageInput.value.trim();
+    }
 
-// Start with a fresh chat
-createNewChat();
+    /* =========================
+       11. CHAT HISTORY
+    ========================= */
+
+    function renderHistory() {
+        historyList.replaceChildren();
+
+        chats.forEach(chat => {
+            const item = document.createElement("div");
+
+            item.className = "history-item";
+
+            if (chat.id === activeChatId) {
+                item.classList.add("active");
+            }
+
+            item.textContent = chat.title;
+            item.title = chat.title;
+
+            item.addEventListener("click", function() {
+                if (isReplying) return;
+
+                activeChatId = chat.id;
+
+                renderChat();
+                renderHistory();
+            });
+
+            historyList.appendChild(item);
+        });
+    }
+
+    /* =========================
+       12. NEW CHAT BUTTON
+    ========================= */
+
+    document.getElementById("newChat")
+        .addEventListener("click", function() {
+            if (isReplying) return;
+
+            createNewChat();
+
+            if (window.innerWidth <= 700) {
+                app.classList.add("sidebar-hidden");
+            }
+        });
+
+    /* =========================
+       13. SIDEBAR CONTROLS
+    ========================= */
+
+    document.getElementById("closeSidebar")
+        .addEventListener("click", function() {
+            app.classList.add("sidebar-hidden");
+        });
+
+    document.getElementById("openSidebar")
+        .addEventListener("click", function() {
+            app.classList.remove("sidebar-hidden");
+        });
+
+    /* =========================
+       14. DARK AND LIGHT MODE
+    ========================= */
+
+    function toggleTheme() {
+        document.body.classList.toggle("dark");
+
+        const isDark = document.body.classList.contains("dark");
+
+        document.getElementById("themeLabel").textContent =
+            isDark ? "Light mode" : "Dark mode";
+
+        document.getElementById("themeSymbol").textContent =
+            isDark ? "☀" : "☾";
+
+        document.getElementById("topTheme").textContent =
+            isDark ? "☀" : "☾";
+    }
+
+    document.getElementById("toggleTheme")
+        .addEventListener("click", toggleTheme);
+
+    document.getElementById("topTheme")
+        .addEventListener("click", toggleTheme);
+
+    /* =========================
+       15. SUGGESTION BUTTONS
+    ========================= */
+
+    document.querySelectorAll(".suggestion")
+        .forEach(button => {
+            button.addEventListener("click", function() {
+                if (isReplying) return;
+
+                const prompt = button.dataset.prompt;
+
+                messageInput.value = prompt;
+                resizeInput();
+                updateSendButton();
+
+                sendMessage(prompt);
+            });
+        });
+
+    /* =========================
+       16. SCROLL TO BOTTOM
+    ========================= */
+
+    function scrollToBottom() {
+        requestAnimationFrame(() => {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        });
+    }
+
+    /* =========================
+       17. START THE WEBSITE
+    ========================= */
+
+    createNewChat();
+
 </script>
 
 </body>
