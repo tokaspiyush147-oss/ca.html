@@ -1,0 +1,752 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My AI Chat</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #212121;
+    color: white;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Main layout */
+.app {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: #171717;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    transition: 0.3s;
+}
+
+.sidebar-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.logo {
+    font-size: 21px;
+    font-weight: bold;
+}
+
+.new-chat {
+    background: #303030;
+    color: white;
+    border: 1px solid #444;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.new-chat:hover {
+    background: #3b3b3b;
+}
+
+.sidebar h4 {
+    color: #999;
+    font-size: 12px;
+    margin: 10px 5px;
+}
+
+.chat-history {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.history-item {
+    padding: 11px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.history-item:hover {
+    background: #303030;
+}
+
+.sidebar-bottom {
+    border-top: 1px solid #333;
+    padding-top: 15px;
+}
+
+.theme-button {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: white;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 7px;
+}
+
+.theme-button:hover {
+    background: #303030;
+}
+
+/* Main chat area */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+}
+
+.topbar {
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.topbar h3 {
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.menu-button {
+    display: none;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 23px;
+    cursor: pointer;
+}
+
+/* Messages */
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 20px 180px;
+}
+
+.welcome {
+    text-align: center;
+    margin: 12vh auto 0;
+    max-width: 600px;
+}
+
+.welcome h1 {
+    font-size: 30px;
+    margin-bottom: 30px;
+}
+
+.suggestions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.suggestion {
+    padding: 16px;
+    background: transparent;
+    color: inherit;
+    border: 1px solid #444;
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.suggestion:hover {
+    background: #303030;
+}
+
+/* Message rows */
+.message-row {
+    max-width: 780px;
+    margin: 0 auto 25px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.avatar {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #10a37f;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.message-content {
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    padding-top: 3px;
+    white-space: pre-wrap;
+}
+
+.user-avatar {
+    background: #555;
+}
+
+.message-content p {
+    margin-bottom: 10px;
+}
+
+/* Input area */
+.input-area {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(
+        transparent,
+        #212121 18%
+    );
+}
+
+.input-box {
+    max-width: 780px;
+    margin: 0 auto;
+    background: #303030;
+    border: 1px solid #555;
+    border-radius: 18px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+#userInput {
+    flex: 1;
+    min-width: 0;
+    max-height: 180px;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: white;
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 8px 0;
+}
+
+#userInput::placeholder {
+    color: #aaa;
+}
+
+.send-button {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    color: #171717;
+    font-size: 22px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.send-button:hover {
+    background: #ddd;
+}
+
+.send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.disclaimer {
+    text-align: center;
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 12px;
+}
+
+/* Light theme */
+body.light {
+    background: #ffffff;
+    color: #202123;
+}
+
+body.light .sidebar {
+    background: #f5f5f5;
+}
+
+body.light .new-chat,
+body.light .suggestion {
+    color: #202123;
+    background: transparent;
+    border-color: #ddd;
+}
+
+body.light .new-chat:hover,
+body.light .suggestion:hover,
+body.light .history-item:hover,
+body.light .theme-button:hover {
+    background: #e8e8e8;
+}
+
+body.light .theme-button {
+    color: #202123;
+}
+
+body.light .input-box {
+    background: #f4f4f4;
+    border-color: #ddd;
+}
+
+body.light #userInput {
+    color: #202123;
+}
+
+body.light .input-area {
+    background: linear-gradient(
+        transparent,
+        #ffffff 18%
+    );
+}
+
+body.light .disclaimer {
+    color: #666;
+}
+
+body.light .user-avatar {
+    background: #ddd;
+    color: #202123;
+}
+
+body.light .avatar:not(.user-avatar) {
+    background: #10a37f;
+    color: white;
+}
+
+/* Mobile design */
+@media (max-width: 650px) {
+    .sidebar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 10;
+        width: 260px;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .menu-button {
+        display: block;
+    }
+
+    .topbar {
+        padding: 15px;
+        gap: 12px;
+    }
+
+    .messages {
+        padding: 15px 14px 170px;
+    }
+
+    .welcome {
+        margin-top: 8vh;
+    }
+
+    .welcome h1 {
+        font-size: 24px;
+    }
+
+    .suggestions {
+        grid-template-columns: 1fr;
+    }
+
+    .input-area {
+        padding: 12px;
+    }
+
+    .message-row {
+        gap: 10px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-top">
+            <div class="logo">✳ My AI</div>
+        </div>
+
+        <button class="new-chat" id="newChat">
+            ＋ New chat
+        </button>
+
+        <h4>RECENT CHATS</h4>
+
+        <div class="chat-history" id="chatHistory"></div>
+
+        <div class="sidebar-bottom">
+            <button class="theme-button" id="themeButton">
+                ☀️ Switch to light mode
+            </button>
+        </div>
+
+    </aside>
+
+    <!-- Main section -->
+    <main class="main">
+
+        <header class="topbar">
+            <button class="menu-button" id="menuButton"
+                    aria-label="Open sidebar">
+                ☰
+            </button>
+
+            <h3>My AI Chat</h3>
+
+            <span>✨</span>
+        </header>
+
+        <!-- Chat messages -->
+        <section class="messages" id="messages"
+                 aria-live="polite">
+
+            <div class="welcome" id="welcome">
+
+                <h1>What can I help with?</h1>
+
+                <div class="suggestions">
+
+                    <button class="suggestion">
+                        💡 Explain a difficult topic
+                    </button>
+
+                    <button class="suggestion">
+                        💻 Help me write code
+                    </button>
+
+                    <button class="suggestion">
+                        📚 Help me study for exams
+                    </button>
+
+                    <button class="suggestion">
+                        ✍️ Write something for me
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Message input -->
+        <div class="input-area">
+
+            <form class="input-box" id="chatForm">
+
+                <textarea
+                    id="userInput"
+                    placeholder="Ask anything..."
+                    rows="1"
+                    aria-label="Your message"
+                    required
+                ></textarea>
+
+                <button class="send-button" id="sendButton"
+                        type="submit" aria-label="Send message">
+                    ↑
+                </button>
+
+            </form>
+
+            <p class="disclaimer">
+                My AI can make mistakes. Check important information.
+            </p>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+const messages = document.getElementById("messages");
+const welcome = document.getElementById("welcome");
+const userInput = document.getElementById("userInput");
+const chatForm = document.getElementById("chatForm");
+const newChat = document.getElementById("newChat");
+const chatHistory = document.getElementById("chatHistory");
+const sidebar = document.getElementById("sidebar");
+const menuButton = document.getElementById("menuButton");
+const themeButton = document.getElementById("themeButton");
+const sendButton = document.getElementById("sendButton");
+
+let currentChatId = 0;
+let chats = [];
+let isWaiting = false;
+
+// Create a new conversation
+function createNewChat() {
+    currentChatId++;
+
+    chats.unshift({
+        id: currentChatId,
+        title: "New chat",
+        messages: []
+    });
+
+    welcome.style.display = "block";
+    messages.querySelectorAll(".message-row").forEach(row => row.remove());
+
+    userInput.value = "";
+    userInput.style.height = "auto";
+
+    renderHistory();
+    sidebar.classList.remove("open");
+    userInput.focus();
+}
+
+// Display conversation history
+function renderHistory() {
+    chatHistory.replaceChildren();
+
+    chats.forEach(chat => {
+        const item = document.createElement("div");
+
+        item.className = "history-item";
+        item.textContent = chat.title;
+        item.title = chat.title;
+
+        item.addEventListener("click", () => {
+            openChat(chat.id);
+        });
+
+        chatHistory.appendChild(item);
+    });
+}
+
+// Open an earlier conversation
+function openChat(id) {
+    const chat = chats.find(item => item.id === id);
+
+    if (!chat) return;
+
+    currentChatId = id;
+
+    messages.querySelectorAll(".message-row").forEach(row => row.remove());
+
+    welcome.style.display = chat.messages.length ? "none" : "block";
+
+    chat.messages.forEach(message => {
+        addMessage(message.text, message.sender, false);
+    });
+
+    sidebar.classList.remove("open");
+}
+
+// Add a message to the screen
+function addMessage(text, sender, save = true) {
+    welcome.style.display = "none";
+
+    const row = document.createElement("div");
+    row.className = "message-row";
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+
+    const content = document.createElement("div");
+    content.className = "message-content";
+
+    if (sender === "user") {
+        avatar.classList.add("user-avatar");
+        avatar.textContent = "Y";
+        content.textContent = text;
+    } else {
+        avatar.textContent = "✳";
+        content.textContent = text;
+    }
+
+    row.append(avatar, content);
+    messages.appendChild(row);
+
+    if (save) {
+        const chat = chats.find(item => item.id === currentChatId);
+
+        if (chat) {
+            chat.messages.push({ text, sender });
+
+            if (chat.title === "New chat" && sender === "user") {
+                chat.title = text.length > 28
+                    ? text.slice(0, 28) + "..."
+                    : text;
+
+                renderHistory();
+            }
+        }
+    }
+
+    messages.scrollTop = messages.scrollHeight;
+
+    return content;
+}
+
+// Simple demo response generator
+// This is not a real AI model.
+function getDemoResponse(question) {
+    const q = question.toLowerCase();
+
+    if (q.includes("hello") || q.includes("hi")) {
+        return "Hello! 👋 How can I help you today?";
+    }
+
+    if (q.includes("your name")) {
+        return "I'm My AI, a demo chatbot built with HTML, CSS, and JavaScript.";
+    }
+
+    if (q.includes("html")) {
+        return "HTML stands for HyperText Markup Language. It structures webpages using elements such as headings, paragraphs, links, images, and forms.";
+    }
+
+    if (q.includes("css")) {
+        return "CSS stands for Cascading Style Sheets. It controls the appearance of webpages, including colors, spacing, layouts, and responsive design.";
+    }
+
+    if (q.includes("javascript") || q.includes("java script")) {
+        return "JavaScript makes webpages interactive. You can use it to respond to clicks, validate forms, update content, and build web applications.";
+    }
+
+    if (q.includes("python")) {
+        return "Python is a beginner-friendly programming language used for automation, web development, data science, and artificial intelligence.";
+    }
+
+    if (q.includes("cpp") || q.includes("c++")) {
+        return "C++ is a compiled programming language. Start with variables, data types, operators, conditions, loops, functions, arrays, and object-oriented programming.";
+    }
+
+    if (q.includes("study") || q.includes("exam")) {
+        return "Try this study plan:\n\n1. Understand the topic.\n2. Make short notes.\n3. Practise important questions.\n4. Solve previous exam papers.\n5. Revise regularly.\n\nTell me your subject and I can help you make a more specific plan.";
+    }
+
+    if (q.includes("help")) {
+        return "Of course! Tell me what you need help with. You can ask about programming, studying, writing, science, or general topics.";
+    }
+
+    return "Thanks for your question!\n\nThis demo chatbot can respond to a few predefined topics, but it isn't connected to a real AI model or live search engine.\n\nTo get intelligent answers to arbitrary questions and search the web, you would need to connect a backend to an AI API or search service.";
+}
+
+// Send message
+function sendMessage(text) {
+    text = text.trim();
+
+    if (!text || isWaiting) return;
+
+    if (currentChatId === 0) {
+        createNewChat();
+    }
+
+    addMessage(text, "user");
+
+    userInput.value = "";
+    userInput.style.height = "auto";
+
+    isWaiting = true;
+    sendButton.disabled = true;
+
+    const answer = getDemoResponse(text);
+
+    // Simulate a short response delay
+    setTimeout(() => {
+        addMessage(answer, "ai");
+
+        isWaiting = false;
+        sendButton.disabled = false;
+        userInput.focus();
+    }, 500);
+}
+
+// Submit using the Send button or Enter
+chatForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+    sendMessage(userInput.value);
+});
+
+// Enter sends; Shift+Enter adds a new line
+userInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        chatForm.requestSubmit();
+    }
+});
+
+// Automatically increase textarea height
+userInput.addEventListener("input", function() {
+    userInput.style.height = "auto";
+    userInput.style.height =
+        Math.min(userInput.scrollHeight, 180) + "px";
+});
+
+// New chat button
+newChat.addEventListener("click", createNewChat);
+
+// Example prompts
+document.querySelectorAll(".suggestion").forEach(button => {
+    button.addEventListener("click", () => {
+        sendMessage(button.textContent.replace(/^[^\w]+/, "").trim());
+    });
+});
+
+// Mobile sidebar
+menuButton.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+});
+
+// Light/dark mode
+themeButton.addEventListener("click", () => {
+    document.body.classList.toggle("light");
+
+    themeButton.textContent =
+        document.body.classList.contains("light")
+            ? "🌙 Switch to dark mode"
+            : "☀️ Switch to light mode";
+});
+
+// Start with a fresh chat
+createNewChat();
+</script>
+
+</body>
+</html>
+```
